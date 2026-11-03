@@ -88,6 +88,7 @@
 
   /* ---------- Opening: ribbon video plays, then the cover opens to reveal the page ---------- */
   var video = document.getElementById('coverVideo');
+  var poster = document.getElementById('coverPoster');
   var hint = document.getElementById('coverHint');
   var photoBox = document.getElementById('coverPhoto');
   var photoImg = document.getElementById('coverPhotoImg');
@@ -102,6 +103,8 @@
     var left = (vw - VW * s) / 2, top = (vh - VH * s) / 2;
     video.style.width = VW * s + 'px'; video.style.height = VH * s + 'px';
     video.style.left = left + 'px'; video.style.top = top + 'px';
+    poster.style.width = VW * s + 'px'; poster.style.height = VH * s + 'px';
+    poster.style.left = left + 'px'; poster.style.top = top + 'px';
     // keep the hint on the blank part of the card, just below the bow, at any screen shape
     hint.style.top = (top + VH * s * 0.765) + 'px';
     // opening photograph: the blank area of the card above the bow (video px: x 118-602, y 178-478)
@@ -148,7 +151,11 @@
     hint.classList.add('hide');
     photoBox.classList.add('hide');           // the photograph fades away as the ribbon begins to move
     video.loop = false;
-    video.addEventListener('playing', function () { video.removeAttribute('poster'); }, { once: true });
+    // the poster stays on screen until the video has really painted a frame, so there is no flash or colour jump
+    var shown = false;
+    function showVideo() { if (shown) return; shown = true; video.classList.add('ready'); }
+    if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(function () { setTimeout(showVideo, 30); });
+    video.addEventListener('timeupdate', function () { if (video.currentTime > 0.08) showVideo(); });
     var p = video.play();
     if (p && p.catch) p.catch(finish);
     // the clip ends on the hero photograph: fade out once the card has fully opened
